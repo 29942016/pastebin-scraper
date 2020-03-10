@@ -18,13 +18,13 @@ def CanReachDatabase():
     if table == False:
         return False
 
-    print('[DB] ', dbName, '->', collectionName)
-    print('=====================\n')
-
     data = table.find({})
     total = table.estimated_document_count()
 
-    print('Total Entries: ', total)
+    print('[DB] ', dbName, '->', collectionName)
+    print('[DB] Total Entries: ', total)
+    print('=====================\n')
+
     for document in data:
         temp = Scrape(document['_id'], document['user'], document['misc'])
         print(temp)
