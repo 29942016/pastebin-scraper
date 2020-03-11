@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from dbAccessors import CanReachDatabase
 from scraper import GetTenUrls
+import time
 import os
 
 # os.system('cls')
@@ -14,7 +15,10 @@ def main():
     if CanReachDatabase() == False:
         exit
 
-    pastes = GetTenUrls()
+    while 1 == 1:
+        GetTenUrls()
+        print('Sleeping...')
+        time.sleep(30)
 
 
 main()

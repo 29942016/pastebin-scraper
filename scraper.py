@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import scraper
 import os
+import re
 
 _url = 'https://pastebin.com'
 _raw = _url + '/raw'
@@ -21,13 +22,15 @@ def GetTenUrls():
         items[_url] = _id
 
     for key in items:
-        FetchPasteData(key, items[key])
+        content = FetchPasteData(key, items[key])
+        print(key)
+        Analyze(content)
 
     return items
 
 
 def FetchPasteData(url, id):
-    os.system('cls')
+    # os.system('cls')
     page = requests.get(_raw + url)
 
     if(page.status_code == 404):
@@ -38,4 +41,14 @@ def FetchPasteData(url, id):
 
 
 def Analyze(data):
+    html = data.decode('utf-8')
+    pEmail = r'[\w\.-]+@[\w\.-]+'
+    results = re.findall(pEmail, html)
+    if(results):
+        for result in results:
+            print(result)
+    else:
+        print('no results.')
+
+    print('===')
     return False
