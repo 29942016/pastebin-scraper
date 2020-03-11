@@ -3,12 +3,13 @@ import requests
 import scraper
 import os
 import re
+from dbAccessors import InsertDocument
 
 _url = 'https://pastebin.com'
 _raw = _url + '/raw'
 
 
-def GetTenUrls():
+def GetTenUrls(skipKeys):
     items = {}
     page = requests.get(scraper._url)
     soup = BeautifulSoup(page.content, 'html.parser')
@@ -22,15 +23,23 @@ def GetTenUrls():
         items[_url] = _id
 
     for key in items:
-        content = FetchPasteData(key, items[key])
-        print(key)
-        Analyze(content)
+        # Don't analyze already analyzed pastes.
+        if(key in skipKeys):
+            print('skipping ' + key)
+            continue
 
+        content = FetchPasteData(key, items[key])
+        hits = Analyze(content)
+
+        # insert to db
+        if(hits):
+            InsertDocument('emails', key, hits, content.decode('utf-8'))
+
+    # Updated what we've analyzed to cache
     return items
 
 
 def FetchPasteData(url, id):
-    # os.system('cls')
     page = requests.get(_raw + url)
 
     if(page.status_code == 404):
@@ -42,11 +51,13 @@ def FetchPasteData(url, id):
 
 def Analyze(data):
     html = data.decode('utf-8')
-    pEmail = r'[\w\.-]+@[\w\.-]+'
+    #pEmail = r'[\w\.-]+@[\w\.-]+'
+    pEmail = r'[\w\.-]+@[\w\.-]\.[\w\.-]+'
     results = re.findall(pEmail, html)
     if(results):
         for result in results:
             print(result)
+        return results
     else:
         print('no results.')
 

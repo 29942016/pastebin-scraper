@@ -3,6 +3,14 @@ from dto.scrape import Scrape
 from pymongo.errors import ServerSelectionTimeoutError
 
 
+def GetClient():
+    dbName = 'data'
+    collectionName = 'scrapes'
+    client = MongoClient('localhost', 27017)
+    db = GetDbCollection(client, dbName)
+    return db
+
+
 def CanReachDatabase():
     dbName = 'data'
     collectionName = 'scrapes'
@@ -59,3 +67,11 @@ def DoesTableExist(dbObject, collectionToFind):
     else:
         print('[ERR] Failed to find table.')
         return False
+
+
+def InsertDocument(table, url, hit, content):
+    client = GetClient()
+
+    if(client):
+        newDocument = {"url": url, "hit":  hit, "content": content}
+        client[table].insert_one(newDocument)

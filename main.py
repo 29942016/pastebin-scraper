@@ -15,8 +15,9 @@ def main():
     if CanReachDatabase() == False:
         exit
 
+    scannedUrls = {}
     while 1 == 1:
-        GetTenUrls()
+        scannedUrls = GetTenUrls(scannedUrls)
         print('Sleeping...')
         time.sleep(30)
 
