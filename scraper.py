@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import scraper
 import os
+import time
 import re
 from dbAccessors import InsertDocument
 
@@ -10,56 +11,62 @@ _raw = _url + '/raw'
 
 
 def GetTenUrls(skipKeys):
-    items = {}
-    page = requests.get(scraper._url)
-    soup = BeautifulSoup(page.content, 'html.parser')
+    try:
+        items = {}
+        page = requests.get(scraper._url)
+        soup = BeautifulSoup(page.content, 'html.parser')
 
-    lUrlsContainer = soup.find(id='menu_2')
-    lAnchorTags = lUrlsContainer.find_all('a')
+        lUrlsContainer = soup.find(id='menu_2')
+        lAnchorTags = lUrlsContainer.find_all('a')
 
-    for anchorTag in lAnchorTags:
-        _url = anchorTag.attrs['href']
-        _id = anchorTag.contents[0]
-        items[_url] = _id
+        for anchorTag in lAnchorTags:
+            _url = anchorTag.attrs['href']
+            _id = anchorTag.contents[0]
+            items[_url] = _id
 
-    for key in items:
-        # Don't analyze already analyzed pastes.
-        if(key in skipKeys):
-            print('skipping ' + key)
-            continue
+        for key in items:
+            # Don't analyze already analyzed pastes.
+            if(key in skipKeys):
+                print('\nskipping ' + key)
+                continue
 
-        content = FetchPasteData(key, items[key])
-        hits = Analyze(content)
+            # Add 5 seconds delay to stop IP ban
+            time.sleep(5)
+            content = FetchPasteData(key, items[key])
+            hits = Analyze(content)
+            print('.', end='')
 
-        # insert to db
-        if(hits):
-            InsertDocument('emails', key, hits, content.decode('utf-8'))
+            # insert to db
+            if(hits):
+                InsertDocument('emails', key, hits, content.decode('utf-8'))
 
-    # Updated what we've analyzed to cache
-    return items
+        # Updated what we've analyzed to cache
+        return items
+    except:
+        return
 
 
 def FetchPasteData(url, id):
     page = requests.get(_raw + url)
 
     if(page.status_code == 404):
-        print('Failed to fetch: ', url)
+        print('\nFailed to fetch: ', url)
         return False
 
     return page.content
 
 
 def Analyze(data):
-    html = data.decode('utf-8')
-    #pEmail = r'[\w\.-]+@[\w\.-]+'
-    pEmail = r'[\w\.-]+@[\w\.-]\.[\w\.-]+'
-    results = re.findall(pEmail, html)
-    if(results):
-        for result in results:
-            print(result)
-        return results
-    else:
-        print('no results.')
+    try:
+        html = data.decode('utf-8')
+        #pEmail = r'[\w\.-]+@[\w\.-]+'
+        #pEmail = r'[\w\.-]+@[\w\.-]\.[\w\.-]+'
+        pEmail = r'[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}'
+        results = re.findall(pEmail, html)
+        if(results):
+            print('\n[HIT] ' + results[0])
+            return results
 
-    print('===')
-    return False
+        return False
+    except:
+        return False

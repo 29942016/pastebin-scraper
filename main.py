@@ -18,8 +18,8 @@ def main():
     scannedUrls = {}
     while 1 == 1:
         scannedUrls = GetTenUrls(scannedUrls)
-        print('Sleeping...')
-        time.sleep(30)
+        print('\nSleeping...')
+        time.sleep(20)
 
 
 main()
